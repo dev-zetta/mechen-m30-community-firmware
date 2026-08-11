@@ -11,19 +11,19 @@ See [CHANGELOG.md](CHANGELOG.md) for release-to-release changes.
 
 | Field | Value |
 |---|---|
-| Release | `V1.200.01` |
+| Release | `V1.201.00` |
 | Displayed build date | `2026-08-11` |
 | Stock base | Mechen `2025-06-26`, displayed as `V1.101.10` |
-| Install image | `releases/v1.200.01/MECHEN_M30.HEX` |
-| Image SHA-256 | `bf4527995d5f30bcba69231fbcc28c7c7dacbfa49feac763faf74e45a86516f9` |
-| Source commit | `03557af` (`Hotfix screen-off key freeze in V1.200.01`) |
+| Install image | `releases/v1.201.00/MECHEN_M30.HEX` |
+| Image SHA-256 | `3ea30973feaa0a4339f790b48c06ad856106552ff10218f07c2f64f7706d7abe` |
+| Source commit | `a6f8088` (`Build M30 community firmware V1.201.00`) |
 
 The `.HEX` file is an encrypted Actions Semiconductor firmware-update
 container, not an Intel HEX text file.
 
 ## Included bug fixes
 
-This release integrates nineteen independently guarded fix sets. It adds five
+This release integrates twenty independently guarded fix sets. It adds six
 fixes over V1.101.12:
 
 1. **CUE resolver initialization (`M30-STATIC-007`)** — clears the metadata
@@ -37,6 +37,9 @@ fixes over V1.101.12:
    and consumer cap together.
 5. **Decoder callback safety (`M30-STATIC-002`)** — initializes the previously
    indeterminate decoder write callback to a defined function returning `-1`.
+6. **ASRC coefficient-loader safety (`M30-STATIC-001`)** — commits a new
+   coefficient set only after a successful seek, two exact reads, and close;
+   incomplete loads fail silent and remain eligible for retry.
 
 It retains the fourteen V1.101.12 fixes, including:
 
@@ -67,11 +70,11 @@ The build changes six of the 99 inner firmware members. Every application
 module retains its original size, header, segment table, bank table, and fixed
 allocation; all other members remain byte-identical to stock.
 
-V1.200.01 also fixes a regression in V1.101.14/V1.200.00: pressing a non-power
-key during playback with the display off could freeze the player. The hotfix
-removes the VM-backed configurable-lock selector and restores the exact stock
-strict-lock key path in all seven application overlays. The locked-controls
-Settings entry is consequently no longer present.
+V1.201.00 retains the V1.200.01 correction for a regression in
+V1.101.14/V1.200.00: pressing a non-power key during playback with the display
+off could freeze the player. The hotfix removed the VM-backed configurable-lock
+selector and restored the exact stock strict-lock key path in all seven
+application overlays. The locked-controls Settings entry remains absent.
 
 ## Installation
 
@@ -81,37 +84,42 @@ Settings entry is consequently no longer present.
 > already running the matching `2025-06-26` / `V1.101.10` firmware family.
 
 1. Fully charge the player and use a known-good FAT32 SD card.
-2. Copy `releases/v1.200.01/MECHEN_M30.HEX` to the root of the card.
+2. Copy `releases/v1.201.00/MECHEN_M30.HEX` to the root of the card.
 3. Ensure it is the only `.HEX` update image on the card.
-4. Verify its SHA-256 against `releases/v1.200.01/SHA256SUMS`.
+4. Verify its SHA-256 against `releases/v1.201.00/SHA256SUMS`.
 5. On the player, open **Settings → Auto Upgrade**.
 6. Do not interrupt power or remove the card while the update is running.
-7. After reboot, confirm version `V1.200.01` and date `2026-08-11` in the UI.
+7. After reboot, confirm version `V1.201.00` and date `2026-08-11` in the UI.
 
 V1.101.14 and V1.200.00 were accepted through Auto Upgrade on one Mechen M30,
 but later repeatable testing exposed their screen-off key regression. They are
-superseded and should not be installed. V1.200.01 is the software-verified
-correction and still requires the hardware test below.
+superseded and should not be installed. V1.200.01 corrected the regression and
+passed the complete screen-off, power-wake, and screen-on hardware test.
 
 After installation, start playback, let the display turn off, and press every
 non-power key individually. Each key must follow the stock locked behavior
 without freezing. Verify power-button wake separately, then repeat the same
 controls with the display on.
 
+For the new ASRC guard, test ordinary start, pause/resume, seek, track change,
+repeat modes, and stop across the sample rates your player accepts. Listen for
+silence, distortion, channel imbalance, or a failed restart after switching
+rates. Do not corrupt firmware resource `coeffi.bin` to force an error path.
+
 ## Verification
 
-- The complete inherited focused test suite, five hotfix-specific tests, and
-  associated host regressions pass.
+- The complete inherited focused suite, six V1.201.00 integration tests, nine
+  ASRC patch tests, and associated host regressions pass.
 - The complete 99-member FWIMAGE rebuild changes only the six declared
   members and authenticates all six source providers.
 - Every replacement module is baseline-hash pinned and preserves its original
   module size and load layout.
 - Native FWU verification decrypts the image to AFI SHA-256
-  `81590c6f4a4ed89c14a0523500ba379789eb718a0dacc09d9835ad11ab7f1c70`.
+  `c385de36a430598faf73f168549ab912aaa1266ab4830e2b00479343e14f9b78`.
 - Rockbox `atjboottool` independently decrypts the same image to a
   byte-identical AFI.
 - Inner FWIMAGE SHA-256:
-  `2305138b8e3c1bdad3de0d8ad1c4b5c44f0695c9f36dcc3efca3f5c2e30f353c`.
+  `90595f0b7d59e34e4b05fab29b9bfdb95dcfdcaec4ebc4b1d9890adb1dbed1af`.
 
 Software verification does not replace device testing across codecs, board
 revisions, SD cards, and failure conditions.
@@ -119,13 +127,13 @@ revisions, SD cards, and failure conditions.
 ## TODO for the next version
 
 Future ordinary releases increment the middle field and reset the final field:
-`V1.201.00`, `V1.202.00`, and so on. The final field is reserved for an
+`V1.202.00`, `V1.203.00`, and so on. The final field is reserved for an
 exceptional hotfix or rebuild on the same release line.
 
 ### Integration targets
 
 - [ ] `M30-FW-012`: profile and reduce the still-separate two-pass library
-  rebuild time; V1.200.01 accelerates navigation and bounds index memory.
+  rebuild time; V1.201.00 accelerates navigation and bounds index memory.
 - [ ] `M30-FW-014`: reproduce the playing-versus-paused shutdown/battery-drain
   failure and add bounded recovery only at the confirmed stalled stage.
 - [ ] Residual `M30-FW-004`: define and test one consistent filename, title,
@@ -136,8 +144,6 @@ exceptional hotfix or rebuild on the same release line.
   increasing fixed buffers in place.
 - [ ] `M30-STATIC-012`: zero newly allocated `MUSIC.LIB`, `M3U.LIB`, and
   `ALBUM.PIC` ranges while measuring scan time, wear, and power-loss behavior.
-- [ ] `M30-STATIC-001`: define coordinated rollback for ASRC coefficient I/O
-  failures so callers never retain partially replaced coefficients.
 
 ### Requires more research before a safe patch
 

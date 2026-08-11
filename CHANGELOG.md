@@ -1,5 +1,22 @@
 # Changelog
 
+## V1.201.00 — 2026-08-11
+
+Adds guarded ASRC coefficient loading over the hardware-accepted V1.200.01
+payload. Stock records a requested coefficient set as loaded after any
+successful `coeffi.bin` open, even when seek, either read, or close fails.
+
+The replacement accepts only the six physical sets, requires successful seek
+and close plus exact `0x0e00`- and `0x0a0c`-byte reads, and updates loaded state
+only on complete success. Any failure disables the DAC and preserves the old
+loaded-set marker so the next start retries instead of using partially replaced
+coefficients. Successful loading and coefficient data are unchanged.
+
+The ASRC overlay changes 190 byte positions in `mengine.ap` and is disjoint
+from the existing end-drain and decoder-callback fixes. The complete inherited
+suite, nine ASRC tests, six release-integration tests, native update verification,
+and independent Rockbox decryption all pass.
+
 ## V1.200.01 — 2026-08-11
 
 Hotfix for the repeatable V1.101.14/V1.200.00 screen-off key freeze. While
@@ -15,8 +32,9 @@ nineteen guarded fix sets remain included.
 
 The complete inherited test suite and five hotfix-specific tests pass. The
 encrypted image decrypts through both the native verifier and Rockbox
-`atjboottool` to byte-identical AFI data. Hardware validation of every key at
-screen-off is still required.
+`atjboottool` to byte-identical AFI data. The test M30 subsequently passed every
+screen-off non-power key, separate power wake, and screen-on control check
+without freezing.
 
 ## V1.200.00 — 2026-08-11
 
