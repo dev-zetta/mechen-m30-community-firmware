@@ -11,27 +11,23 @@ See [CHANGELOG.md](CHANGELOG.md) for release-to-release changes.
 
 | Field | Value |
 |---|---|
-| Release | `V1.202.01` |
+| Release | `V1.202.02` |
 | Displayed build date | `2026-08-11` |
 | Stock base | Mechen `2025-06-26`, displayed as `V1.101.10` |
-| Install image | `releases/v1.202.01/MECHEN_M30.HEX` |
-| Image SHA-256 | `e1305797ba4109ba5f8977b5ef9fd195294ea76efeca2d503e6ebd88bfd934fa` |
-| Source commit | `afd209c` (`Fix V1.202 database regeneration regression`) |
+| Install image | `releases/v1.202.02/MECHEN_M30.HEX` |
+| Image SHA-256 | `e1e55c5ebce85dc15048870fe7873f81ff0f25778d639838dc72cfd099564cc8` |
+| Source commit | `ecdb102` (`Release V1.202.02 database generation rollback`) |
 
 The `.HEX` file is an encrypted Actions Semiconductor firmware-update
 container, not an Intel HEX text file.
 
 ## Included bug fixes
 
-This release integrates twenty-one independently guarded fix sets. It adds one
-fix set over the hardware-accepted V1.201.00:
-
-1. **Fixed-allocation database zeroing (`M30-STATIC-012`)** — initializes every
-   newly allocated sector of `MUSIC.LIB`, `M3U.LIB`, and `ALBUM.PIC` so unused
-   ranges cannot expose prior FAT-cluster contents. A failed seek or write
-   closes and removes the partial file; existing files take the unchanged path.
-   V1.202.01 restores the shared pathname before stock closes and reopens a new
-   library and corrects the album allocation from `0x0f400` to `0x1f400`.
+This release integrates twenty independently guarded fix sets. V1.202.02 is a
+corrective rollback: it removes the hardware-rejected fixed-allocation
+database-zeroing patch from V1.202.00/V1.202.01 and restores the byte-exact
+V1.201.00 `playlist.ap`. `M30-STATIC-012` is open again; this release makes no
+claim that unused database ranges are zero or free of prior FAT-cluster data.
 
 It retains the six fixes introduced on the V1.200/V1.201 release line:
 
@@ -75,10 +71,12 @@ It also retains the fourteen V1.101.12 fixes, including:
    drain before normal EOF shutdown, while preserving the stock timeout and
    abnormal-EOF fallback.
 
-The build changes six of the 99 inner firmware members relative to stock;
-only `playlist.ap` and the version marker change relative to V1.202.00. Every
-application module retains its original size, header, segment table, bank table,
-and fixed allocation; all other members remain byte-identical to stock.
+The build changes six of the 99 inner firmware members relative to stock. Only
+the version marker differs from V1.201.00; relative to V1.202.01, `playlist.ap`
+removes the exact 352-byte-position zeroing overlay and `setting.ap` changes the
+version. Every application module retains its original size, header, segment
+table, bank table, and fixed allocation; all other members remain
+byte-identical to stock.
 
 V1.201.00 retains the V1.200.01 correction for a regression in
 V1.101.14/V1.200.00: pressing a non-power key during playback with the display
@@ -94,12 +92,12 @@ application overlays. The locked-controls Settings entry remains absent.
 > already running the matching `2025-06-26` / `V1.101.10` firmware family.
 
 1. Fully charge the player and use a known-good FAT32 SD card.
-2. Copy `releases/v1.202.01/MECHEN_M30.HEX` to the root of the card.
+2. Copy `releases/v1.202.02/MECHEN_M30.HEX` to the root of the card.
 3. Ensure it is the only `.HEX` update image on the card.
-4. Verify its SHA-256 against `releases/v1.202.01/SHA256SUMS`.
+4. Verify its SHA-256 against `releases/v1.202.02/SHA256SUMS`.
 5. On the player, open **Settings → Auto Upgrade**.
 6. Do not interrupt power or remove the card while the update is running.
-7. After reboot, confirm version `V1.202.01` and date `2026-08-11` in the UI.
+7. After reboot, confirm version `V1.202.02` and date `2026-08-11` in the UI.
 
 V1.101.14 and V1.200.00 were accepted through Auto Upgrade on one Mechen M30,
 but later repeatable testing exposed their screen-off key regression. They are
@@ -108,8 +106,12 @@ passed the complete screen-off, power-wake, and screen-on hardware test.
 V1.201.00 subsequently booted and passed ordinary playback testing on the same
 player, confirming the successful ASRC-loading path on hardware. V1.202.00 is
 superseded: file-list generation repeatedly stopped at 50% and omitted
-`M3U.LIB`. V1.202.01 corrects both identified overlay errors but still requires
-its own hardware acceptance.
+`M3U.LIB`. V1.202.01 corrected two overlay defects but failed again: an
+existing card stopped at 50%, while a fresh card stopped at 10% and produced
+no database files. V1.202.02 removes the overlay. Its first hardware run reached
+100% and created all six database/favorite files at the expected sizes with
+valid finalized headers. The captured `MUSIC.LIB` was empty, so that run did
+not independently validate non-empty audio indexing.
 
 After installation, start playback, let the display turn off, and press every
 non-power key individually. Each key must follow the stock locked behavior
@@ -117,26 +119,26 @@ without freezing. Verify power-button wake separately, then repeat the same
 controls with the display on.
 
 First test ordinary start, pause/resume, seek, track change, repeat modes,
-screen-off controls, and stop. To exercise the new fix without reformatting,
-preserve the current database files for comparison, remove only `MUSIC.LIB`,
-`M3U.LIB`, and `ALBUM.PIC` from the SD card, and let the player rebuild them.
-Do not interrupt power during this first test. Record rebuild time and retain
-the three new files so their unused ranges can be checked for zeroes.
+screen-off controls, and stop. For a regeneration test, use a freshly
+player-formatted card with at least one known-supported audio file and preserve
+the complete input inventory plus regenerated databases. Generation must reach
+100%; `MUSIC.LIB`, `M3U.LIB`, `ALBUM.PIC`, and all three `USERPL*.PL` files must
+exist. Do not expect unused ranges to be zero.
 
 ## Verification
 
-- The complete inherited focused suite, six corrected database-zeroing tests,
-  six V1.202.01 integration tests, and associated host fault regressions pass.
+- The complete V1.201.00 inherited suite, five V1.202.02 composition tests,
+  four hardware-capture format tests, and associated host regressions pass.
 - The complete 99-member FWIMAGE rebuild changes only the six declared
   members and authenticates all six source providers.
 - Every replacement module is baseline-hash pinned and preserves its original
   module size and load layout.
 - Native FWU verification decrypts the image to AFI SHA-256
-  `9e374292d470cd1515ecd70f94ad818b11b0eadbf82651e3435f62a4dfba0f32`.
+  `4bec727c8b47785f3b7dd15413d1aba337d4a7c7d6a5d803e2167182a7127047`.
 - Rockbox `atjboottool` independently decrypts the same image to a
   byte-identical AFI.
 - Inner FWIMAGE SHA-256:
-  `fad682e70e3731132d8322ddb1e3352fb765a60247c07792395237a429ba5048`.
+  `5002e90281653ff985fd39daf3ed10bb2aff84b9cc4eb55bf8f67130ad03995d`.
 
 Software verification does not replace device testing across codecs, board
 revisions, SD cards, and failure conditions.
@@ -161,6 +163,9 @@ exceptional hotfix or rebuild on the same release line.
   increasing fixed buffers in place.
 ### Requires more research before a safe patch
 
+- [ ] `M30-STATIC-012`: replace the rejected foreground database-zeroing loop
+  with bounded asynchronous initialization, a filesystem clear primitive, or
+  post-generation cleanup with explicit progress and rollback.
 - [ ] `M30-FW-013`: reintroduce configurable locked controls only after finding
   a proven process-wide policy owner or a safe initializer for every application
   overlay; do not perform storage I/O from the screen-off key path.

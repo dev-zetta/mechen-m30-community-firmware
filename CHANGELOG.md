@@ -1,8 +1,29 @@
 # Changelog
 
+## V1.202.02 — 2026-08-11
+
+Corrective rollback for the V1.202.00/V1.202.01 database-generation
+regression. V1.202.01 installed byte-exactly but still stopped at the first
+missing fixed-allocation database: 50% without `M3U.LIB` on an existing card,
+and 10% with no databases on a fresh card.
+
+V1.202.02 removes all 352 byte positions belonging to the synchronous
+sector-zeroing overlay and restores the byte-exact V1.201.00 `playlist.ap`.
+All twenty previously accepted functional fix sets remain; only the unresolved
+`M30-STATIC-012` privacy patch is removed. The displayed version is
+`V1.202.02`; the build date remains `2026-08-11`.
+
+The complete inherited suite, authenticated 99-member rebuild, rollback tests,
+native encrypted-update verification, and independent Rockbox decryption pass.
+On the test M30, file-list generation reached 100% and created structurally
+valid `MUSIC.LIB`, `M3U.LIB`, `ALBUM.PIC`, and three initialized `USERPL*.PL`
+files at the expected sizes. The captured music database contained zero tracks,
+so this run validates database creation but not non-empty audio indexing.
+
 ## V1.202.01 — 2026-08-11
 
-Hotfix for V1.202.00 file-list generation repeatedly stopping at 50% without
+**Superseded by V1.202.02. Do not install:** the corrected overlay still failed
+hardware regeneration. This was intended as a hotfix for V1.202.00 stopping without
 creating `M3U.LIB`. The V1.202.00 zeroing helper saved the UTF-16LE pathname
 before reusing the shared sector buffer, but failed to restore it before the
 unchanged stock close/reopen continuation. Its separate album adapter also
@@ -20,7 +41,7 @@ remains the acceptance test.
 
 ## V1.202.00 — 2026-08-11
 
-**Superseded by V1.202.01. Do not install:** hardware file-list generation
+**Superseded by V1.202.02. Do not install:** hardware file-list generation
 repeatedly stopped at 50% and omitted `M3U.LIB`.
 
 Adds guarded zero-initialization for newly allocated `MUSIC.LIB`, `M3U.LIB`,
