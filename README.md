@@ -11,19 +11,19 @@ See [CHANGELOG.md](CHANGELOG.md) for release-to-release changes.
 
 | Field | Value |
 |---|---|
-| Release | `V1.200.00` |
+| Release | `V1.200.01` |
 | Displayed build date | `2026-08-11` |
 | Stock base | Mechen `2025-06-26`, displayed as `V1.101.10` |
-| Install image | `releases/v1.200.00/MECHEN_M30.HEX` |
-| Image SHA-256 | `11df4bf7a4a63c867d009ab98388147e51d55fc3b4c318cad417c2f83941e3c6` |
-| Source commit | `c2e29b0` (`Promote M30 community firmware V1.200.00`) |
+| Install image | `releases/v1.200.01/MECHEN_M30.HEX` |
+| Image SHA-256 | `bf4527995d5f30bcba69231fbcc28c7c7dacbfa49feac763faf74e45a86516f9` |
+| Source commit | `03557af` (`Hotfix screen-off key freeze in V1.200.01`) |
 
 The `.HEX` file is an encrypted Actions Semiconductor firmware-update
 container, not an Intel HEX text file.
 
 ## Included bug fixes
 
-This release integrates twenty independently guarded fix sets. It adds six
+This release integrates nineteen independently guarded fix sets. It adds five
 fixes over V1.101.12:
 
 1. **CUE resolver initialization (`M30-STATIC-007`)** — clears the metadata
@@ -35,9 +35,7 @@ fixes over V1.101.12:
 4. **10,000-track indexed library (`M30-FW-006`)** — replaces the fixed 4,000
    entry in-memory index with a bounded, paged builder and raises every scanner
    and consumer cap together.
-5. **Configurable locked controls (`M30-FW-013`)** — adds a persistent Settings
-   selector for strict locking or the official transport-key whitelist.
-6. **Decoder callback safety (`M30-STATIC-002`)** — initializes the previously
+5. **Decoder callback safety (`M30-STATIC-002`)** — initializes the previously
    indeterminate decoder write callback to a defined function returning `-1`.
 
 It retains the fourteen V1.101.12 fixes, including:
@@ -65,9 +63,15 @@ It retains the fourteen V1.101.12 fixes, including:
    drain before normal EOF shutdown, while preserving the stock timeout and
    abnormal-EOF fallback.
 
-The build changes ten of the 99 inner firmware members. Every application
+The build changes six of the 99 inner firmware members. Every application
 module retains its original size, header, segment table, bank table, and fixed
 allocation; all other members remain byte-identical to stock.
+
+V1.200.01 also fixes a regression in V1.101.14/V1.200.00: pressing a non-power
+key during playback with the display off could freeze the player. The hotfix
+removes the VM-backed configurable-lock selector and restores the exact stock
+strict-lock key path in all seven application overlays. The locked-controls
+Settings entry is consequently no longer present.
 
 ## Installation
 
@@ -77,32 +81,37 @@ allocation; all other members remain byte-identical to stock.
 > already running the matching `2025-06-26` / `V1.101.10` firmware family.
 
 1. Fully charge the player and use a known-good FAT32 SD card.
-2. Copy `releases/v1.200.00/MECHEN_M30.HEX` to the root of the card.
+2. Copy `releases/v1.200.01/MECHEN_M30.HEX` to the root of the card.
 3. Ensure it is the only `.HEX` update image on the card.
-4. Verify its SHA-256 against `releases/v1.200.00/SHA256SUMS`.
+4. Verify its SHA-256 against `releases/v1.200.01/SHA256SUMS`.
 5. On the player, open **Settings → Auto Upgrade**.
 6. Do not interrupt power or remove the card while the update is running.
-7. After reboot, confirm version `V1.200.00` and date `2026-08-11` in the UI.
+7. After reboot, confirm version `V1.200.01` and date `2026-08-11` in the UI.
 
-The V1.101.14 candidate containing the exact V1.200.00 functional payload was
-accepted through Auto Upgrade and operated normally on one Mechen M30.
-V1.200.00 changes only seven version-marker bytes in `setting.ap`. This
-establishes acceptance for that unit and payload, not every board revision or
-failure condition.
+V1.101.14 and V1.200.00 were accepted through Auto Upgrade on one Mechen M30,
+but later repeatable testing exposed their screen-off key regression. They are
+superseded and should not be installed. V1.200.01 is the software-verified
+correction and still requires the hardware test below.
+
+After installation, start playback, let the display turn off, and press every
+non-power key individually. Each key must follow the stock locked behavior
+without freezing. Verify power-button wake separately, then repeat the same
+controls with the display on.
 
 ## Verification
 
-- All 167 focused unit tests and associated host regressions pass.
-- The complete 99-member FWIMAGE rebuild changes only the ten declared
-  members and authenticates all ten source providers.
+- The complete inherited focused test suite, five hotfix-specific tests, and
+  associated host regressions pass.
+- The complete 99-member FWIMAGE rebuild changes only the six declared
+  members and authenticates all six source providers.
 - Every replacement module is baseline-hash pinned and preserves its original
   module size and load layout.
 - Native FWU verification decrypts the image to AFI SHA-256
-  `07a35c4a09aec46fd703bd893a5c6ec8de539fb0da8a2205355c59c966baf8fb`.
+  `81590c6f4a4ed89c14a0523500ba379789eb718a0dacc09d9835ad11ab7f1c70`.
 - Rockbox `atjboottool` independently decrypts the same image to a
   byte-identical AFI.
 - Inner FWIMAGE SHA-256:
-  `99ae7fede8b7a81b1a1ede114d4c2c784dd1316dfb575cae8b9cd207407c4088`.
+  `2305138b8e3c1bdad3de0d8ad1c4b5c44f0695c9f36dcc3efca3f5c2e30f353c`.
 
 Software verification does not replace device testing across codecs, board
 revisions, SD cards, and failure conditions.
@@ -116,7 +125,7 @@ exceptional hotfix or rebuild on the same release line.
 ### Integration targets
 
 - [ ] `M30-FW-012`: profile and reduce the still-separate two-pass library
-  rebuild time; V1.200.00 accelerates navigation and bounds index memory.
+  rebuild time; V1.200.01 accelerates navigation and bounds index memory.
 - [ ] `M30-FW-014`: reproduce the playing-versus-paused shutdown/battery-drain
   failure and add bounded recovery only at the confirmed stalled stage.
 - [ ] Residual `M30-FW-004`: define and test one consistent filename, title,
@@ -132,6 +141,9 @@ exceptional hotfix or rebuild on the same release line.
 
 ### Requires more research before a safe patch
 
+- [ ] `M30-FW-013`: reintroduce configurable locked controls only after finding
+  a proven process-wide policy owner or a safe initializer for every application
+  overlay; do not perform storage I/O from the screen-off key path.
 - [ ] `M30-FW-002`: true gapless playback needs a second source or atomic PCM
   handoff; keeping the DAC open is insufficient.
 - [ ] `M30-FW-008`: high-rate EQ is a DSP memory/cycle project, not a simple

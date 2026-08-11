@@ -1,6 +1,27 @@
 # Changelog
 
+## V1.200.01 — 2026-08-11
+
+Hotfix for the repeatable V1.101.14/V1.200.00 screen-off key freeze. While
+music was playing with the display off, pressing any non-power key could leave
+the player unresponsive until restart; screen-on controls and the power-key
+wake path were unaffected.
+
+The configurable locked-controls feature is disabled. V1.200.01 removes its
+VM read/write callbacks, Settings menu/resources, runtime helper, and all seven
+application hooks. Each application now contains the exact stock strict-lock
+hook and zero reserve, avoiding storage access in the key path. The other
+nineteen guarded fix sets remain included.
+
+The complete inherited test suite and five hotfix-specific tests pass. The
+encrypted image decrypts through both the native verifier and Rockbox
+`atjboottool` to byte-identical AFI data. Hardware validation of every key at
+screen-off is still required.
+
 ## V1.200.00 — 2026-08-11
+
+**Superseded by V1.200.01. Do not install:** later repeatable hardware testing
+found the screen-off non-power-key freeze described above.
 
 First release under the community firmware's minor-version scheme. Future
 ordinary releases advance the middle field (`V1.201.00`, `V1.202.00`, ...);
