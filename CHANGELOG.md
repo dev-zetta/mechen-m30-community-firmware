@@ -1,6 +1,27 @@
 # Changelog
 
+## V1.202.01 — 2026-08-11
+
+Hotfix for V1.202.00 file-list generation repeatedly stopping at 50% without
+creating `M3U.LIB`. The V1.202.00 zeroing helper saved the UTF-16LE pathname
+before reusing the shared sector buffer, but failed to restore it before the
+unchanged stock close/reopen continuation. Its separate album adapter also
+constructed `0x0f400` rather than the stock `0x1f400` allocation.
+
+The corrected helper restores the pathname after its final rewind, and the
+album adapter now passes the exact stock size. Relative to V1.202.00, only
+`playlist.ap` and one version byte in `setting.ap` change; the playlist delta
+is 111 byte positions. Existing database files remain on the unchanged path.
+
+The complete inherited suite, corrected host regression, all-release guards,
+six-provider 99-member rebuild, native encrypted-update verification, and
+independent Rockbox decryption pass. Fresh three-file generation on hardware
+remains the acceptance test.
+
 ## V1.202.00 — 2026-08-11
+
+**Superseded by V1.202.01. Do not install:** hardware file-list generation
+repeatedly stopped at 50% and omitted `M3U.LIB`.
 
 Adds guarded zero-initialization for newly allocated `MUSIC.LIB`, `M3U.LIB`,
 and `ALBUM.PIC` files (`M30-STATIC-012`) over the hardware-accepted V1.201.00
