@@ -1,5 +1,28 @@
 # Changelog
 
+## V1.200.00 — 2026-08-11
+
+First release under the community firmware's minor-version scheme. Future
+ordinary releases advance the middle field (`V1.201.00`, `V1.202.00`, ...);
+the final field is reserved for exceptional hotfix rebuilds.
+
+The exact functional payload was hardware-tested as the V1.101.14 candidate.
+V1.200.00 changes only the displayed version marker and passes the complete
+167-test release and dual-decryption gate.
+
+Added six guarded fixes over V1.101.12:
+
+- support up to 10,000 tracks in indexed Music views with bounded paged
+  indexing and coordinated scanner/consumer limits;
+- add a persistent Settings selector for strict or transport-enabled locked
+  controls;
+- initialize the decoder write callback to a defined rejecting function;
+- initialize CUE resolver metadata and bounded scratch storage;
+- repair backward seeking from the final CUE track;
+- reject favorite-playlist position zero without a 65,536-record traversal.
+
+All fourteen V1.101.12 fixes remain included.
+
 ## V1.101.12 — 2026-08-11
 
 Hardware accepted on a Mechen M30 through the player's **Settings → Auto

@@ -11,36 +11,36 @@ See [CHANGELOG.md](CHANGELOG.md) for release-to-release changes.
 
 | Field | Value |
 |---|---|
-| Release | `V1.101.12` |
+| Release | `V1.200.00` |
 | Displayed build date | `2026-08-11` |
 | Stock base | Mechen `2025-06-26`, displayed as `V1.101.10` |
-| Install image | `releases/v1.101.12/MECHEN_M30.HEX` |
-| Image SHA-256 | `e6ae7b672e86c1743d15a460a2e9987dc9f39f273b13825cb953f7f638e3ce3b` |
-| Source commit | `f41bd2b` (`Build M30 community firmware V1.101.12 candidate`) |
+| Install image | `releases/v1.200.00/MECHEN_M30.HEX` |
+| Image SHA-256 | `11df4bf7a4a63c867d009ab98388147e51d55fc3b4c318cad417c2f83941e3c6` |
+| Source commit | `c2e29b0` (`Promote M30 community firmware V1.200.00`) |
 
 The `.HEX` file is an encrypted Actions Semiconductor firmware-update
 container, not an Intel HEX text file.
 
 ## Included bug fixes
 
-This release integrates fourteen independently guarded fix sets. V1.101.12
-adds the following six fixes:
+This release integrates twenty independently guarded fix sets. It adds six
+fixes over V1.101.12:
 
-1. **Safe lyric navigation (`M30-STATIC-003`)** — prevents Previous Lyric from
-   decrementing index zero to `65535` and keeps the first lyric at index one.
-2. **Exact lyric timestamp transition (`M30-STATIC-004`)** — refreshes the
-   lyric when playback time equals the next timestamp instead of waiting for a
-   later tick.
-3. **Final lyric timeout (`M30-STATIC-005`)** — uses the intended 1.5-second
-   final-label window instead of 90 seconds.
-4. **Lyric buffer boundary (`M30-STATIC-006`)** — removes a redundant
-   terminator write one byte beyond the caller-provided lyric buffer.
-5. **CUE metadata capacities (`M30-STATIC-008`)** — reserves terminator space
-   in the title, artist, and album buffers.
-6. **SD-removal result (`M30-STATIC-010`)** — returns the action already
-   computed by the handler rather than replacing it with a constant result.
+1. **CUE resolver initialization (`M30-STATIC-007`)** — clears the metadata
+   structure and supplies bounded title storage before parsing.
+2. **Final-CUE-track backward seeking (`M30-STATIC-009`)** — computes the seek
+   destination after replacing the absent next-track time with file duration.
+3. **Favorite position zero (`M30-STATIC-011`)** — rejects zero instead of
+   traversing up to 65,536 playlist records.
+4. **10,000-track indexed library (`M30-FW-006`)** — replaces the fixed 4,000
+   entry in-memory index with a bounded, paged builder and raises every scanner
+   and consumer cap together.
+5. **Configurable locked controls (`M30-FW-013`)** — adds a persistent Settings
+   selector for strict locking or the official transport-key whitelist.
+6. **Decoder callback safety (`M30-STATIC-002`)** — initializes the previously
+   indeterminate decoder write callback to a defined function returning `-1`.
 
-It retains all eight V1.101.11 fixes:
+It retains the fourteen V1.101.12 fixes, including:
 
 1. **Metadata safety and compatibility (`M30-FW-003`, `M30-FW-005`,
    `M30-FW-015`)** — bounds Ogg, FLAC, MP3, WMA/ASF, AA, AAX/M4A, and APE
@@ -65,9 +65,9 @@ It retains all eight V1.101.11 fixes:
    drain before normal EOF shutdown, while preserving the stock timeout and
    abnormal-EOF fallback.
 
-The build changes five of the 99 inner firmware members: four modules contain
-the fourteen functional fixes, and `setting.ap` contains the version/date
-marker. All other 94 members retain their exact allocated bytes.
+The build changes ten of the 99 inner firmware members. Every application
+module retains its original size, header, segment table, bank table, and fixed
+allocation; all other members remain byte-identical to stock.
 
 ## Installation
 
@@ -77,45 +77,46 @@ marker. All other 94 members retain their exact allocated bytes.
 > already running the matching `2025-06-26` / `V1.101.10` firmware family.
 
 1. Fully charge the player and use a known-good FAT32 SD card.
-2. Copy `releases/v1.101.12/MECHEN_M30.HEX` to the root of the card.
+2. Copy `releases/v1.200.00/MECHEN_M30.HEX` to the root of the card.
 3. Ensure it is the only `.HEX` update image on the card.
-4. Verify its SHA-256 against `releases/v1.101.12/SHA256SUMS`.
+4. Verify its SHA-256 against `releases/v1.200.00/SHA256SUMS`.
 5. On the player, open **Settings → Auto Upgrade**.
 6. Do not interrupt power or remove the card while the update is running.
-7. After reboot, confirm version `V1.101.12` and date `2026-08-11` in the UI.
+7. After reboot, confirm version `V1.200.00` and date `2026-08-11` in the UI.
 
-This exact V1.101.12 image was accepted through Auto Upgrade on one Mechen M30.
-The player booted and operated normally after installation. This establishes
-acceptance for that unit, not every board revision or failure condition.
+The V1.101.14 candidate containing the exact V1.200.00 functional payload was
+accepted through Auto Upgrade and operated normally on one Mechen M30.
+V1.200.00 changes only seven version-marker bytes in `setting.ap`. This
+establishes acceptance for that unit and payload, not every board revision or
+failure condition.
 
 ## Verification
 
-- All 129 focused unit tests and associated host regressions pass: 121 for the
-  inherited V1.101.11 fixes and eight for the V1.101.12 additions/composition.
-- The complete 99-member FWIMAGE rebuild changes only the five declared
-  members.
+- All 167 focused unit tests and associated host regressions pass.
+- The complete 99-member FWIMAGE rebuild changes only the ten declared
+  members and authenticates all ten source providers.
 - Every replacement module is baseline-hash pinned and preserves its original
   module size and load layout.
 - Native FWU verification decrypts the image to AFI SHA-256
-  `ee0965140da1515f64e5ecb98f8d60447b37b01f2e206b67a165297d99a32397`.
+  `07a35c4a09aec46fd703bd893a5c6ec8de539fb0da8a2205355c59c966baf8fb`.
 - Rockbox `atjboottool` independently decrypts the same image to a
   byte-identical AFI.
 - Inner FWIMAGE SHA-256:
-  `1926b3268499b0e92af234d0d5aec1aee3957dfcc2baf1afebb3a42b503eea1b`.
+  `99ae7fede8b7a81b1a1ede114d4c2c784dd1316dfb575cae8b9cd207407c4088`.
 
 Software verification does not replace device testing across codecs, board
 revisions, SD cards, and failure conditions.
 
 ## TODO for the next version
 
+Future ordinary releases increment the middle field and reset the final field:
+`V1.201.00`, `V1.202.00`, and so on. The final field is reserved for an
+exceptional hotfix or rebuild on the same release line.
+
 ### Integration targets
 
-- [ ] `M30-FW-006`: integrate and device-test the existing paged index for up
-  to 10,000 tracks, including interrupted rebuild and database rollback.
-- [ ] `M30-FW-013`: integrate a persistent user-selectable lock policy instead
-  of requiring a firmware downgrade to change locked-screen controls.
 - [ ] `M30-FW-012`: profile and reduce the still-separate two-pass library
-  rebuild time; the current release accelerates navigation, not scanning.
+  rebuild time; V1.200.00 accelerates navigation and bounds index memory.
 - [ ] `M30-FW-014`: reproduce the playing-versus-paused shutdown/battery-drain
   failure and add bounded recovery only at the confirmed stalled stage.
 - [ ] Residual `M30-FW-004`: define and test one consistent filename, title,
@@ -124,13 +125,10 @@ revisions, SD cards, and failure conditions.
 - [ ] Residual `M30-FW-005` and `M30-FW-015`: run the artwork and long-string
   device matrices, then address remaining JPEG/UI/codepage failures without
   increasing fixed buffers in place.
-- [ ] `M30-STATIC-007` and `M30-STATIC-009`: initialize CUE metadata/time state
-  and repair final-track backward seeking.
-- [ ] `M30-STATIC-011`: reject favorite-playlist position zero.
 - [ ] `M30-STATIC-012`: zero newly allocated `MUSIC.LIB`, `M3U.LIB`, and
   `ALBUM.PIC` ranges while measuring scan time, wear, and power-loss behavior.
-- [ ] `M30-STATIC-001` and `M30-STATIC-002`: define safe failure behavior for
-  ASRC coefficient I/O and the decoder's uninitialized write callback.
+- [ ] `M30-STATIC-001`: define coordinated rollback for ASRC coefficient I/O
+  failures so callers never retain partially replaced coefficients.
 
 ### Requires more research before a safe patch
 
