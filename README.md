@@ -11,25 +11,30 @@ See [CHANGELOG.md](CHANGELOG.md) for release-to-release changes.
 
 | Field | Value |
 |---|---|
-| Release | `V1.202.03` |
+| Release | `V1.203.01` |
 | Displayed build date | `2026-08-11` |
 | Stock base | Mechen `2025-06-26`, displayed as `V1.101.10` |
-| Install image | `releases/v1.202.03/MECHEN_M30.HEX` |
-| Image SHA-256 | `de2660cea96d509a275c76e3beb05aab9bd2840b7c7a9e736e179a9d5ee255c6` |
-| Source commit | `cabe526` (`Release V1.202.03 indexed-library rollback`) |
+| Install image | `releases/v1.203.01/MECHEN_M30.HEX` |
+| Image SHA-256 | `0bd5e98892f3bd674fd392209f2c034b0807a4556d605edc35b7d960fd6743cb` |
+| Source commit | `d99637c` (`Release V1.203.01 album-art regression hotfix`) |
 
 The `.HEX` file is an encrypted Actions Semiconductor firmware-update
 container, not an Intel HEX text file.
 
 ## Included bug fixes
 
-V1.202.03 is a corrective rollback for the indexed-library regression inherited
-by V1.202.02. It removes the hardware-rejected 10,000-track paged builder and
-restores the stock fixed-array 4,000-track architecture while retaining the
-other guarded fixes. It also retains V1.202.02's removal of the rejected
-fixed-allocation database-zeroing patch. `M30-STATIC-012` remains open; this
-release makes no claim that unused database ranges are zero or free of prior
-FAT-cluster data.
+V1.203.01 adds a bounded FLAC metadata-block scan so artist/album comments are
+found even when a large PICTURE block places them beyond the stock 8 KiB
+window. It is also a hotfix for rejected V1.203.00: that candidate wrote a
+valid decoded cover cache but its new reader guard suppressed all
+playing-screen artwork. V1.203.01 restores the complete accepted V1.202.03
+reader byte-for-byte. Hardware testing confirmed that artwork returned and
+indexed metadata remained functional.
+
+It retains V1.202.03's stock fixed-array 4,000-track architecture and removal
+of the rejected fixed-allocation database-zeroing patch. `M30-STATIC-012`
+remains open; this release makes no claim that unused database ranges are zero
+or free of prior FAT-cluster data.
 
 It retains the six fixes introduced on the V1.200/V1.201 release line:
 
@@ -74,12 +79,11 @@ It also retains the fourteen V1.101.12 fixes, including:
    abnormal-EOF fallback.
 
 The build changes six of the 99 inner firmware members relative to stock.
-Relative to V1.202.02, only `playlist.ap`, `browser.ap`, `mainmenu.ap`, and the
-versioned `setting.ap` change. The rollback removes exactly 7,687 paged-index
-byte positions from `playlist.ap` and ten raised-cap byte positions from each
-consumer. Every application module retains its original size, header, segment
-table, bank table, and fixed allocation; all other members remain
-byte-identical to V1.202.02.
+Relative to V1.202.03, only `music.ap` and the versioned `setting.ap` change.
+The `music.ap` delta is exactly 112 byte positions in the bounded FLAC finder;
+all three rejected V1.203.00 cache-reader regions are byte-identical to
+V1.202.03. Every application module retains its original size, header, segment
+table, bank table, and fixed allocation.
 
 V1.201.00 retains the V1.200.01 correction for a regression in
 V1.101.14/V1.200.00: pressing a non-power key during playback with the display
@@ -95,11 +99,11 @@ application overlays. The locked-controls Settings entry remains absent.
 > running the matching `2025-06-26` firmware family.
 
 1. Fully charge the player and use a known-good FAT32 SD card.
-2. Copy `releases/v1.202.03/MECHEN_M30.HEX` to the card root.
+2. Copy `releases/v1.203.01/MECHEN_M30.HEX` to the card root.
 3. Ensure it is the only `.HEX` update image on the card.
-4. Verify its SHA-256 against `releases/v1.202.03/SHA256SUMS`.
+4. Verify its SHA-256 against `releases/v1.203.01/SHA256SUMS`.
 5. Open **Settings → Auto Upgrade** and do not interrupt the update.
-6. Confirm version `V1.202.03` and date `2026-08-11` after reboot.
+6. Confirm version `V1.203.01` and date `2026-08-11` after reboot.
 
 V1.101.14 and V1.200.00 were accepted through Auto Upgrade on one Mechen M30,
 but later repeatable testing exposed their screen-off key regression. They are
@@ -115,7 +119,9 @@ captured `MUSIC.LIB` contains 1,439 linked records behind a finalized zero-count
 header. The custom paged builder therefore failed after scanning, and indexed
 Music views are unusable. V1.202.02 is withdrawn. V1.202.03 removes that
 builder; hardware regeneration indexed all 1,439 tracks and restored All Songs,
-Album, Artist/Author, and Genre.
+Album, Artist/Author, and Genre. V1.203.00 is also withdrawn: its FLAC metadata
+fix worked, but its cache-reader guard suppressed playing-screen art. V1.203.01
+removes that guard and passed the scoped artwork/metadata regression test.
 
 After installation, start playback, let the display turn off, and press every
 non-power key individually. Each key must follow the stock locked behavior
@@ -131,18 +137,18 @@ exist. Do not expect unused ranges to be zero.
 
 ## Verification
 
-- Five V1.202.03 composition tests, five V1.202.02 diagnostic-capture tests,
-  and the inherited component regressions pass.
+- Five V1.203.01 composition tests and the inherited component regressions
+  pass.
 - The complete 99-member FWIMAGE rebuild changes only the six declared
   members and authenticates all six source providers.
 - Every replacement module is baseline-hash pinned and preserves its original
   module size and load layout.
 - Native FWU verification decrypts the image to AFI SHA-256
-  `d07d7489c9ff368b43bb9bf0aabd8f7f0d84457f685446245405327eab57eacd`.
+  `9e99d4623edd5cc8f52e25900ed889bb293f1686fa7456b153281f8a2a044b72`.
 - Rockbox `atjboottool` independently decrypts the same image to a
   byte-identical AFI.
 - Inner FWIMAGE SHA-256:
-  `7f7757f4f96494b2ade5e2a4ea98a5e3defbee0dc811cd66f41b34f03e4506ef`.
+  `24ec723633222c78d4a09494d4ebef485653a6355d091ae3b4b8ba0e9ade3575`.
 
 Software verification does not replace device testing across codecs, board
 revisions, SD cards, and failure conditions.
@@ -162,9 +168,12 @@ exceptional hotfix or rebuild on the same release line.
 - [ ] Residual `M30-FW-004`: define and test one consistent filename, title,
   disc, track, Unicode, and copy-order policy beyond the two corrected numeric
   defects.
-- [ ] Residual `M30-FW-005` and `M30-FW-015`: run the artwork and long-string
-  device matrices, then address remaining JPEG/UI/codepage failures without
-  increasing fixed buffers in place.
+- [ ] Residual `M30-FW-005`: run the nine-case artwork matrix, distinguishing
+  baseline/progressive JPEG, PNG, dimensions, tag version, embedded art, and
+  external `Folder.jpg`; then change the decoder only where hardware evidence
+  identifies a safe boundary.
+- [ ] Residual `M30-FW-015`: run the long-string device matrix, then address
+  remaining UI/codepage failures without increasing fixed buffers in place.
 ### Requires more research before a safe patch
 
 - [ ] `M30-STATIC-012`: replace the rejected foreground database-zeroing loop

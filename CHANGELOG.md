@@ -1,5 +1,25 @@
 # Changelog
 
+## V1.203.01 — 2026-08-11
+
+Hardware-accepted FLAC metadata and album-art regression hotfix. The bounded
+FLAC block scan follows valid metadata-block lengths instead of giving up at
+the stock 8 KiB window, fixing artist/album fallback when a large PICTURE block
+precedes VORBIS_COMMENT.
+
+V1.203.00 proved that scan on hardware, but its independent strict-marker and
+geometry guard suppressed all Playing-screen artwork even though the player
+wrote a valid, nonblank `ALBUM.PIC`. V1.203.01 removes all 80 reader-change
+byte positions and restores those regions byte-for-byte from V1.202.03 while
+retaining the 112-byte-position FLAC finder change. The test player booted,
+retained working indexed metadata, and displayed artwork again. V1.203.00 is
+withdrawn and should not be installed.
+
+The encrypted image SHA-256 is
+`0bd5e98892f3bd674fd392209f2c034b0807a4556d605edc35b7d960fd6743cb`.
+Native and Rockbox decryption produce the same AFI SHA-256
+`9e99d4623edd5cc8f52e25900ed889bb293f1686fa7456b153281f8a2a044b72`.
+
 ## V1.202.03 — 2026-08-11
 
 Hardware-accepted indexed-library rollback. V1.202.02 scanned 1,439 tracks but
