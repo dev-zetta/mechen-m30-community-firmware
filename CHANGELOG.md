@@ -1,6 +1,32 @@
 # Changelog
 
+## V1.202.03 — 2026-08-11
+
+Hardware-accepted indexed-library rollback. V1.202.02 scanned 1,439 tracks but
+its inherited 10,000-track paged builder failed afterward and finalized a
+zero-count `MUSIC.LIB`, leaving All Songs, Album, Artist/Author, and Genre
+empty. Folder playback bypassed those views and masked the regression.
+
+V1.202.03 removes the paged builder, restores the stock fixed-array 4,000-track
+architecture and `0x281000` `MUSIC.LIB` allocation, and restores all ten stock
+consumer caps. The M3U, track-order, metadata, CUE/favorite, screen-off lock,
+decoder callback, track-end drain, and ASRC fixes remain. On the test M30, a
+clean regeneration indexed all 1,439 tracks and every indexed Music category
+opened correctly.
+
+The encrypted image SHA-256 is
+`de2660cea96d509a275c76e3beb05aab9bd2840b7c7a9e736e179a9d5ee255c6`.
+Native and Rockbox decryption produce the same AFI SHA-256
+`d07d7489c9ff368b43bb9bf0aabd8f7f0d84457f685446245405327eab57eacd`.
+
 ## V1.202.02 — 2026-08-11
+
+**Withdrawn. Do not install:** later indexed-view testing showed Album,
+Artist, Genre, and All Songs as empty. The captured `MUSIC.LIB` body contains
+1,439 correctly linked records while its finalized header reports zero tracks,
+proving that the inherited custom paged builder failed after a successful
+scan. Folder playback bypassed the broken views and masked the regression.
+V1.202.03 restores the stock 4,000-track index pipeline.
 
 Corrective rollback for the V1.202.00/V1.202.01 database-generation
 regression. V1.202.01 installed byte-exactly but still stopped at the first
@@ -9,16 +35,18 @@ and 10% with no databases on a fresh card.
 
 V1.202.02 removes all 352 byte positions belonging to the synchronous
 sector-zeroing overlay and restores the byte-exact V1.201.00 `playlist.ap`.
-All twenty previously accepted functional fix sets remain; only the unresolved
-`M30-STATIC-012` privacy patch is removed. The displayed version is
+All twenty inherited functional patch sets remain, including the paged index
+that this later test rejected; only the unresolved `M30-STATIC-012` privacy
+patch is removed. The displayed version is
 `V1.202.02`; the build date remains `2026-08-11`.
 
 The complete inherited suite, authenticated 99-member rebuild, rollback tests,
 native encrypted-update verification, and independent Rockbox decryption pass.
 On the test M30, file-list generation reached 100% and created structurally
 valid `MUSIC.LIB`, `M3U.LIB`, `ALBUM.PIC`, and three initialized `USERPL*.PL`
-files at the expected sizes. The captured music database contained zero tracks,
-so this run validates database creation but not non-empty audio indexing.
+files at the expected sizes. Subsequent body analysis proved that 1,439 tracks
+had been scanned before the paged builder erased the logical count, so reaching
+100% did not produce a usable index.
 
 ## V1.202.01 — 2026-08-11
 

@@ -11,23 +11,25 @@ See [CHANGELOG.md](CHANGELOG.md) for release-to-release changes.
 
 | Field | Value |
 |---|---|
-| Release | `V1.202.02` |
+| Release | `V1.202.03` |
 | Displayed build date | `2026-08-11` |
 | Stock base | Mechen `2025-06-26`, displayed as `V1.101.10` |
-| Install image | `releases/v1.202.02/MECHEN_M30.HEX` |
-| Image SHA-256 | `e1e55c5ebce85dc15048870fe7873f81ff0f25778d639838dc72cfd099564cc8` |
-| Source commit | `ecdb102` (`Release V1.202.02 database generation rollback`) |
+| Install image | `releases/v1.202.03/MECHEN_M30.HEX` |
+| Image SHA-256 | `de2660cea96d509a275c76e3beb05aab9bd2840b7c7a9e736e179a9d5ee255c6` |
+| Source commit | `cabe526` (`Release V1.202.03 indexed-library rollback`) |
 
 The `.HEX` file is an encrypted Actions Semiconductor firmware-update
 container, not an Intel HEX text file.
 
 ## Included bug fixes
 
-This release integrates twenty independently guarded fix sets. V1.202.02 is a
-corrective rollback: it removes the hardware-rejected fixed-allocation
-database-zeroing patch from V1.202.00/V1.202.01 and restores the byte-exact
-V1.201.00 `playlist.ap`. `M30-STATIC-012` is open again; this release makes no
-claim that unused database ranges are zero or free of prior FAT-cluster data.
+V1.202.03 is a corrective rollback for the indexed-library regression inherited
+by V1.202.02. It removes the hardware-rejected 10,000-track paged builder and
+restores the stock fixed-array 4,000-track architecture while retaining the
+other guarded fixes. It also retains V1.202.02's removal of the rejected
+fixed-allocation database-zeroing patch. `M30-STATIC-012` remains open; this
+release makes no claim that unused database ranges are zero or free of prior
+FAT-cluster data.
 
 It retains the six fixes introduced on the V1.200/V1.201 release line:
 
@@ -37,9 +39,9 @@ It retains the six fixes introduced on the V1.200/V1.201 release line:
    destination after replacing the absent next-track time with file duration.
 3. **Favorite position zero (`M30-STATIC-011`)** — rejects zero instead of
    traversing up to 65,536 playlist records.
-4. **10,000-track indexed library (`M30-FW-006`)** — replaces the fixed 4,000
-   entry in-memory index with a bounded, paged builder and raises every scanner
-   and consumer cap together.
+4. **Indexed-library recovery (`M30-FW-006`)** — removes the rejected paged
+   builder and restores the stock 4,000-track pipeline. The test M30 indexed
+   all 1,439 tracks and opened All Songs, Album, Artist/Author, and Genre.
 5. **Decoder callback safety (`M30-STATIC-002`)** — initializes the previously
    indeterminate decoder write callback to a defined function returning `-1`.
 6. **ASRC coefficient-loader safety (`M30-STATIC-001`)** — commits a new
@@ -71,12 +73,13 @@ It also retains the fourteen V1.101.12 fixes, including:
    drain before normal EOF shutdown, while preserving the stock timeout and
    abnormal-EOF fallback.
 
-The build changes six of the 99 inner firmware members relative to stock. Only
-the version marker differs from V1.201.00; relative to V1.202.01, `playlist.ap`
-removes the exact 352-byte-position zeroing overlay and `setting.ap` changes the
-version. Every application module retains its original size, header, segment
+The build changes six of the 99 inner firmware members relative to stock.
+Relative to V1.202.02, only `playlist.ap`, `browser.ap`, `mainmenu.ap`, and the
+versioned `setting.ap` change. The rollback removes exactly 7,687 paged-index
+byte positions from `playlist.ap` and ten raised-cap byte positions from each
+consumer. Every application module retains its original size, header, segment
 table, bank table, and fixed allocation; all other members remain
-byte-identical to stock.
+byte-identical to V1.202.02.
 
 V1.201.00 retains the V1.200.01 correction for a regression in
 V1.101.14/V1.200.00: pressing a non-power key during playback with the display
@@ -88,16 +91,15 @@ application overlays. The locked-controls Settings entry remains absent.
 
 > [!CAUTION]
 > This is unofficial firmware. A failed update may require opening the player
-> and using an external SPI programmer. Install only on a Mechen M30 that is
-> already running the matching `2025-06-26` / `V1.101.10` firmware family.
+> and using an external SPI programmer. Install only on a Mechen M30 already
+> running the matching `2025-06-26` firmware family.
 
 1. Fully charge the player and use a known-good FAT32 SD card.
-2. Copy `releases/v1.202.02/MECHEN_M30.HEX` to the root of the card.
+2. Copy `releases/v1.202.03/MECHEN_M30.HEX` to the card root.
 3. Ensure it is the only `.HEX` update image on the card.
-4. Verify its SHA-256 against `releases/v1.202.02/SHA256SUMS`.
-5. On the player, open **Settings → Auto Upgrade**.
-6. Do not interrupt power or remove the card while the update is running.
-7. After reboot, confirm version `V1.202.02` and date `2026-08-11` in the UI.
+4. Verify its SHA-256 against `releases/v1.202.03/SHA256SUMS`.
+5. Open **Settings → Auto Upgrade** and do not interrupt the update.
+6. Confirm version `V1.202.03` and date `2026-08-11` after reboot.
 
 V1.101.14 and V1.200.00 were accepted through Auto Upgrade on one Mechen M30,
 but later repeatable testing exposed their screen-off key regression. They are
@@ -108,10 +110,12 @@ player, confirming the successful ASRC-loading path on hardware. V1.202.00 is
 superseded: file-list generation repeatedly stopped at 50% and omitted
 `M3U.LIB`. V1.202.01 corrected two overlay defects but failed again: an
 existing card stopped at 50%, while a fresh card stopped at 10% and produced
-no database files. V1.202.02 removes the overlay. Its first hardware run reached
-100% and created all six database/favorite files at the expected sizes with
-valid finalized headers. The captured `MUSIC.LIB` was empty, so that run did
-not independently validate non-empty audio indexing.
+no database files. V1.202.02 removes the overlay and reaches 100%, but its
+captured `MUSIC.LIB` contains 1,439 linked records behind a finalized zero-count
+header. The custom paged builder therefore failed after scanning, and indexed
+Music views are unusable. V1.202.02 is withdrawn. V1.202.03 removes that
+builder; hardware regeneration indexed all 1,439 tracks and restored All Songs,
+Album, Artist/Author, and Genre.
 
 After installation, start playback, let the display turn off, and press every
 non-power key individually. Each key must follow the stock locked behavior
@@ -127,18 +131,18 @@ exist. Do not expect unused ranges to be zero.
 
 ## Verification
 
-- The complete V1.201.00 inherited suite, five V1.202.02 composition tests,
-  four hardware-capture format tests, and associated host regressions pass.
+- Five V1.202.03 composition tests, five V1.202.02 diagnostic-capture tests,
+  and the inherited component regressions pass.
 - The complete 99-member FWIMAGE rebuild changes only the six declared
   members and authenticates all six source providers.
 - Every replacement module is baseline-hash pinned and preserves its original
   module size and load layout.
 - Native FWU verification decrypts the image to AFI SHA-256
-  `4bec727c8b47785f3b7dd15413d1aba337d4a7c7d6a5d803e2167182a7127047`.
+  `d07d7489c9ff368b43bb9bf0aabd8f7f0d84457f685446245405327eab57eacd`.
 - Rockbox `atjboottool` independently decrypts the same image to a
   byte-identical AFI.
 - Inner FWIMAGE SHA-256:
-  `5002e90281653ff985fd39daf3ed10bb2aff84b9cc4eb55bf8f67130ad03995d`.
+  `7f7757f4f96494b2ade5e2a4ea98a5e3defbee0dc811cd66f41b34f03e4506ef`.
 
 Software verification does not replace device testing across codecs, board
 revisions, SD cards, and failure conditions.
