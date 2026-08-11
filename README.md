@@ -11,20 +11,27 @@ See [CHANGELOG.md](CHANGELOG.md) for release-to-release changes.
 
 | Field | Value |
 |---|---|
-| Release | `V1.201.00` |
+| Release | `V1.202.00` |
 | Displayed build date | `2026-08-11` |
 | Stock base | Mechen `2025-06-26`, displayed as `V1.101.10` |
-| Install image | `releases/v1.201.00/MECHEN_M30.HEX` |
-| Image SHA-256 | `3ea30973feaa0a4339f790b48c06ad856106552ff10218f07c2f64f7706d7abe` |
-| Source commit | `a6f8088` (`Build M30 community firmware V1.201.00`) |
+| Install image | `releases/v1.202.00/MECHEN_M30.HEX` |
+| Image SHA-256 | `70973f802436e25737bea747c0db58c03587324faa32b61f697658cac66e7435` |
+| Source commit | `9e2604c` (`Build M30 community firmware V1.202.00`) |
 
 The `.HEX` file is an encrypted Actions Semiconductor firmware-update
 container, not an Intel HEX text file.
 
 ## Included bug fixes
 
-This release integrates twenty independently guarded fix sets. It adds six
-fixes over V1.101.12:
+This release integrates twenty-one independently guarded fix sets. It adds one
+fix set over the hardware-accepted V1.201.00:
+
+1. **Fixed-allocation database zeroing (`M30-STATIC-012`)** — initializes every
+   newly allocated sector of `MUSIC.LIB`, `M3U.LIB`, and `ALBUM.PIC` so unused
+   ranges cannot expose prior FAT-cluster contents. A failed seek or write
+   closes and removes the partial file; existing files take the unchanged path.
+
+It retains the six fixes introduced on the V1.200/V1.201 release line:
 
 1. **CUE resolver initialization (`M30-STATIC-007`)** — clears the metadata
    structure and supplies bounded title storage before parsing.
@@ -41,7 +48,7 @@ fixes over V1.101.12:
    coefficient set only after a successful seek, two exact reads, and close;
    incomplete loads fail silent and remain eligible for retry.
 
-It retains the fourteen V1.101.12 fixes, including:
+It also retains the fourteen V1.101.12 fixes, including:
 
 1. **Metadata safety and compatibility (`M30-FW-003`, `M30-FW-005`,
    `M30-FW-015`)** — bounds Ogg, FLAC, MP3, WMA/ASF, AA, AAX/M4A, and APE
@@ -66,9 +73,10 @@ It retains the fourteen V1.101.12 fixes, including:
    drain before normal EOF shutdown, while preserving the stock timeout and
    abnormal-EOF fallback.
 
-The build changes six of the 99 inner firmware members. Every application
-module retains its original size, header, segment table, bank table, and fixed
-allocation; all other members remain byte-identical to stock.
+The build changes six of the 99 inner firmware members relative to stock;
+only `playlist.ap` and the version marker change relative to V1.201.00. Every
+application module retains its original size, header, segment table, bank table,
+and fixed allocation; all other members remain byte-identical to stock.
 
 V1.201.00 retains the V1.200.01 correction for a regression in
 V1.101.14/V1.200.00: pressing a non-power key during playback with the display
@@ -84,42 +92,47 @@ application overlays. The locked-controls Settings entry remains absent.
 > already running the matching `2025-06-26` / `V1.101.10` firmware family.
 
 1. Fully charge the player and use a known-good FAT32 SD card.
-2. Copy `releases/v1.201.00/MECHEN_M30.HEX` to the root of the card.
+2. Copy `releases/v1.202.00/MECHEN_M30.HEX` to the root of the card.
 3. Ensure it is the only `.HEX` update image on the card.
-4. Verify its SHA-256 against `releases/v1.201.00/SHA256SUMS`.
+4. Verify its SHA-256 against `releases/v1.202.00/SHA256SUMS`.
 5. On the player, open **Settings → Auto Upgrade**.
 6. Do not interrupt power or remove the card while the update is running.
-7. After reboot, confirm version `V1.201.00` and date `2026-08-11` in the UI.
+7. After reboot, confirm version `V1.202.00` and date `2026-08-11` in the UI.
 
 V1.101.14 and V1.200.00 were accepted through Auto Upgrade on one Mechen M30,
 but later repeatable testing exposed their screen-off key regression. They are
 superseded and should not be installed. V1.200.01 corrected the regression and
 passed the complete screen-off, power-wake, and screen-on hardware test.
+V1.201.00 subsequently booted and passed ordinary playback testing on the same
+player, confirming the successful ASRC-loading path on hardware. V1.202.00
+retains that exact audio path but still requires its own hardware acceptance.
 
 After installation, start playback, let the display turn off, and press every
 non-power key individually. Each key must follow the stock locked behavior
 without freezing. Verify power-button wake separately, then repeat the same
 controls with the display on.
 
-For the new ASRC guard, test ordinary start, pause/resume, seek, track change,
-repeat modes, and stop across the sample rates your player accepts. Listen for
-silence, distortion, channel imbalance, or a failed restart after switching
-rates. Do not corrupt firmware resource `coeffi.bin` to force an error path.
+First test ordinary start, pause/resume, seek, track change, repeat modes,
+screen-off controls, and stop. To exercise the new fix without reformatting,
+preserve the current database files for comparison, remove only `MUSIC.LIB`,
+`M3U.LIB`, and `ALBUM.PIC` from the SD card, and let the player rebuild them.
+Do not interrupt power during this first test. Record rebuild time and retain
+the three new files so their unused ranges can be checked for zeroes.
 
 ## Verification
 
-- The complete inherited focused suite, six V1.201.00 integration tests, nine
-  ASRC patch tests, and associated host regressions pass.
+- The complete inherited focused suite, six database-zeroing patch tests, six
+  V1.202.00 integration tests, and associated host fault regressions pass.
 - The complete 99-member FWIMAGE rebuild changes only the six declared
   members and authenticates all six source providers.
 - Every replacement module is baseline-hash pinned and preserves its original
   module size and load layout.
 - Native FWU verification decrypts the image to AFI SHA-256
-  `c385de36a430598faf73f168549ab912aaa1266ab4830e2b00479343e14f9b78`.
+  `a394e2049795fa056d4725807c5f284c055b9eff9dcf6dbcc9f088fd0a87a0cc`.
 - Rockbox `atjboottool` independently decrypts the same image to a
   byte-identical AFI.
 - Inner FWIMAGE SHA-256:
-  `90595f0b7d59e34e4b05fab29b9bfdb95dcfdcaec4ebc4b1d9890adb1dbed1af`.
+  `a136c4258a7782faca4b7530c2f2c89a931f70837bfec561232068f1d43308a8`.
 
 Software verification does not replace device testing across codecs, board
 revisions, SD cards, and failure conditions.
@@ -127,7 +140,7 @@ revisions, SD cards, and failure conditions.
 ## TODO for the next version
 
 Future ordinary releases increment the middle field and reset the final field:
-`V1.202.00`, `V1.203.00`, and so on. The final field is reserved for an
+`V1.203.00`, `V1.204.00`, and so on. The final field is reserved for an
 exceptional hotfix or rebuild on the same release line.
 
 ### Integration targets
@@ -142,9 +155,6 @@ exceptional hotfix or rebuild on the same release line.
 - [ ] Residual `M30-FW-005` and `M30-FW-015`: run the artwork and long-string
   device matrices, then address remaining JPEG/UI/codepage failures without
   increasing fixed buffers in place.
-- [ ] `M30-STATIC-012`: zero newly allocated `MUSIC.LIB`, `M3U.LIB`, and
-  `ALBUM.PIC` ranges while measuring scan time, wear, and power-loss behavior.
-
 ### Requires more research before a safe patch
 
 - [ ] `M30-FW-013`: reintroduce configurable locked controls only after finding

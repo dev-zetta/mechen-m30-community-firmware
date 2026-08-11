@@ -1,5 +1,26 @@
 # Changelog
 
+## V1.202.00 — 2026-08-11
+
+Adds guarded zero-initialization for newly allocated `MUSIC.LIB`, `M3U.LIB`,
+and `ALBUM.PIC` files (`M30-STATIC-012`) over the hardware-accepted V1.201.00
+payload. Stock preallocates each file at its complete fixed size but initializes
+only headers and live records, allowing unused ranges to expose prior FAT-
+cluster contents through ordinary file access.
+
+The replacement saves the filename, zeroes sector zero first and every
+remaining 512-byte sector, rewinds the handle, and then resumes the unchanged
+stock builder. Any seek or write failure closes and removes the partial full-
+size file. Existing database files do not enter the hook and receive no extra
+writes. A complete three-file recreation adds at most 5.60 MiB of SD-card
+writes and does not touch the player's internal NOR.
+
+Five guarded `playlist.ap` ranges change 334 byte positions and are disjoint
+from every inherited patch. The complete inherited release suite, new host
+fault matrix, all-release byte guards, six-provider build, native encrypted-
+update verification, and independent Rockbox decryption all pass. Hardware
+database recreation, timing, and unused-range capture remain acceptance tests.
+
 ## V1.201.00 — 2026-08-11
 
 Adds guarded ASRC coefficient loading over the hardware-accepted V1.200.01
@@ -15,7 +36,10 @@ coefficients. Successful loading and coefficient data are unchanged.
 The ASRC overlay changes 190 byte positions in `mengine.ap` and is disjoint
 from the existing end-drain and decoder-callback fixes. The complete inherited
 suite, nine ASRC tests, six release-integration tests, native update verification,
-and independent Rockbox decryption all pass.
+and independent Rockbox decryption all pass. The release subsequently booted
+and passed ordinary playback testing on the test M30, validating the successful
+coefficient-loading path on hardware; deliberate resource-failure injection
+remains host-only.
 
 ## V1.200.01 — 2026-08-11
 
