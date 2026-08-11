@@ -5,23 +5,42 @@ repository contains installable release images; the reverse-engineering,
 source reconstruction, build tools, and tests live in the parent research
 project.
 
+See [CHANGELOG.md](CHANGELOG.md) for release-to-release changes.
+
 ## Current release
 
 | Field | Value |
 |---|---|
-| Release | `V1.101.11` |
+| Release | `V1.101.12` |
 | Displayed build date | `2026-08-11` |
 | Stock base | Mechen `2025-06-26`, displayed as `V1.101.10` |
-| Install image | `releases/v1.101.11/MECHEN_M30.HEX` |
-| Image SHA-256 | `d2e276e0ae47c8f2c65bc6542369ad1691ce7abfa83471f2f8431b285d2d94c7` |
-| Source commit | `0a7d9a2` (`Set M30 community firmware build date`) |
+| Install image | `releases/v1.101.12/MECHEN_M30.HEX` |
+| Image SHA-256 | `e6ae7b672e86c1743d15a460a2e9987dc9f39f273b13825cb953f7f638e3ce3b` |
+| Source commit | `f41bd2b` (`Build M30 community firmware V1.101.12 candidate`) |
 
 The `.HEX` file is an encrypted Actions Semiconductor firmware-update
 container, not an Intel HEX text file.
 
 ## Included bug fixes
 
-This release integrates eight independently guarded fix sets:
+This release integrates fourteen independently guarded fix sets. V1.101.12
+adds the following six fixes:
+
+1. **Safe lyric navigation (`M30-STATIC-003`)** — prevents Previous Lyric from
+   decrementing index zero to `65535` and keeps the first lyric at index one.
+2. **Exact lyric timestamp transition (`M30-STATIC-004`)** — refreshes the
+   lyric when playback time equals the next timestamp instead of waiting for a
+   later tick.
+3. **Final lyric timeout (`M30-STATIC-005`)** — uses the intended 1.5-second
+   final-label window instead of 90 seconds.
+4. **Lyric buffer boundary (`M30-STATIC-006`)** — removes a redundant
+   terminator write one byte beyond the caller-provided lyric buffer.
+5. **CUE metadata capacities (`M30-STATIC-008`)** — reserves terminator space
+   in the title, artist, and album buffers.
+6. **SD-removal result (`M30-STATIC-010`)** — returns the action already
+   computed by the handler rather than replacing it with a constant result.
+
+It retains all eight V1.101.11 fixes:
 
 1. **Metadata safety and compatibility (`M30-FW-003`, `M30-FW-005`,
    `M30-FW-015`)** — bounds Ogg, FLAC, MP3, WMA/ASF, AA, AAX/M4A, and APE
@@ -47,8 +66,8 @@ This release integrates eight independently guarded fix sets:
    abnormal-EOF fallback.
 
 The build changes five of the 99 inner firmware members: four modules contain
-the eight functional fixes, and `setting.ap` contains the version/date marker.
-All other 94 members retain their exact allocated bytes.
+the fourteen functional fixes, and `setting.ap` contains the version/date
+marker. All other 94 members retain their exact allocated bytes.
 
 ## Installation
 
@@ -58,31 +77,31 @@ All other 94 members retain their exact allocated bytes.
 > already running the matching `2025-06-26` / `V1.101.10` firmware family.
 
 1. Fully charge the player and use a known-good FAT32 SD card.
-2. Copy `releases/v1.101.11/MECHEN_M30.HEX` to the root of the card.
+2. Copy `releases/v1.101.12/MECHEN_M30.HEX` to the root of the card.
 3. Ensure it is the only `.HEX` update image on the card.
-4. Verify its SHA-256 against `releases/v1.101.11/SHA256SUMS`.
+4. Verify its SHA-256 against `releases/v1.101.12/SHA256SUMS`.
 5. On the player, open **Settings → Auto Upgrade**.
 6. Do not interrupt power or remove the card while the update is running.
-7. After reboot, confirm version `V1.101.11` and date `2026-08-11` in the UI.
+7. After reboot, confirm version `V1.101.12` and date `2026-08-11` in the UI.
 
-The earlier build with the same eight functional modules was accepted by Auto
-Upgrade on one M30, booted normally, and displayed `V1.101.11`. The packaged
-image differs from that tested image only in four displayed-date bytes and is
-awaiting its own installation confirmation.
+This exact V1.101.12 image was accepted through Auto Upgrade on one Mechen M30.
+The player booted and operated normally after installation. This establishes
+acceptance for that unit, not every board revision or failure condition.
 
 ## Verification
 
-- All 121 focused unit tests and associated host regressions pass.
+- All 129 focused unit tests and associated host regressions pass: 121 for the
+  inherited V1.101.11 fixes and eight for the V1.101.12 additions/composition.
 - The complete 99-member FWIMAGE rebuild changes only the five declared
   members.
 - Every replacement module is baseline-hash pinned and preserves its original
   module size and load layout.
 - Native FWU verification decrypts the image to AFI SHA-256
-  `e211c2ce778607399744300199c6e8449aefa18a1d4293079c34608f34fc9eec`.
+  `ee0965140da1515f64e5ecb98f8d60447b37b01f2e206b67a165297d99a32397`.
 - Rockbox `atjboottool` independently decrypts the same image to a
   byte-identical AFI.
 - Inner FWIMAGE SHA-256:
-  `699c4736e6d1d8b56d9c9636035bf5291f9de3495d11c2f22e0b7d285221a5b3`.
+  `1926b3268499b0e92af234d0d5aec1aee3957dfcc2baf1afebb3a42b503eea1b`.
 
 Software verification does not replace device testing across codecs, board
 revisions, SD cards, and failure conditions.
@@ -105,14 +124,9 @@ revisions, SD cards, and failure conditions.
 - [ ] Residual `M30-FW-005` and `M30-FW-015`: run the artwork and long-string
   device matrices, then address remaining JPEG/UI/codepage failures without
   increasing fixed buffers in place.
-- [ ] `M30-STATIC-003` through `M30-STATIC-006`: fix lyric index underflow,
-  equality-boundary refresh, the 90-second final-label constant, and the
-  one-byte label-buffer overflow after caller and device validation.
-- [ ] `M30-STATIC-007` through `M30-STATIC-009`: initialize CUE metadata/time
-  state, correct declared buffer capacities, and repair final-track backward
-  seeking.
-- [ ] `M30-STATIC-010` and `M30-STATIC-011`: preserve the computed SD-removal
-  return action and reject favorite-playlist position zero.
+- [ ] `M30-STATIC-007` and `M30-STATIC-009`: initialize CUE metadata/time state
+  and repair final-track backward seeking.
+- [ ] `M30-STATIC-011`: reject favorite-playlist position zero.
 - [ ] `M30-STATIC-012`: zero newly allocated `MUSIC.LIB`, `M3U.LIB`, and
   `ALBUM.PIC` ranges while measuring scan time, wear, and power-loss behavior.
 - [ ] `M30-STATIC-001` and `M30-STATIC-002`: define safe failure behavior for
