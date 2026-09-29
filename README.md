@@ -11,19 +11,23 @@ See [CHANGELOG.md](CHANGELOG.md) for release-to-release changes.
 
 | Field | Value |
 |---|---|
-| Release | `V1.203.01` |
-| Displayed build date | `2026-08-11` |
+| Release | `V1.292.00` |
+| Displayed build date | `2026-09-29` |
 | Stock base | Mechen `2025-06-26`, displayed as `V1.101.10` |
-| Install image | `releases/v1.203.01/MECHEN_M30.HEX` |
-| Image SHA-256 | `0bd5e98892f3bd674fd392209f2c034b0807a4556d605edc35b7d960fd6743cb` |
-| Source commit | `d99637c` (`Release V1.203.01 album-art regression hotfix`) |
+| Install image | `releases/v1.292.00/MECHEN_M30.HEX` |
+| Image SHA-256 | `5e17d883f697a67d4face6f624ddc30952c5542c918b219be974bf380383ed2c` |
+| Hardware scope | Direct case-11/case-20 recovery acceptance plus byte-identical V1.287 five-format Music payload |
 
 The `.HEX` file is an encrypted Actions Semiconductor firmware-update
 container, not an Intel HEX text file.
 
 ## Included bug fixes
 
-V1.203.01 adds a bounded FLAC metadata-block scan so artist/album comments are
+V1.292.00 is a version-only recovery of the hardware-accepted V1.287 executable payload after V1.288 through V1.291 research builds failed their post-PLAY album-art tests. Its `music.ap` is byte-identical to V1.287.00; only two displayed-version bytes change in `setting.ap`. The bounded CPU fallback accepts baseline JPEG album art rejected by the stock decoder, accepts one- or three-component baseline JPEG, bounds compressed input to 44,800 bytes, bounds presentation to 150x150, caps input/MCU/output callbacks, and rejects any RGB565 write that could overlap unread compressed input. It retains the stock-success painter and enters the fallback only after a complete parser spool and stock failure.
+
+Direct V1.292 hardware testing displayed covers with responsive playback for case 20 almost immediately and case 11 after approximately four seconds. The byte-identical V1.287 Music payload had previously passed all five pinned 30-second controls: 640x361 and 641x361 4:2:0, 641x361 4:4:4, 641x361 4:2:2, and 641x361 grayscale. The synchronous fallback delay is a known limitation. Progressive JPEG, PNG, fallback JPEG payloads above 44,800 bytes, other containers/codecs, malformed cases outside the bounded tests, and other device revisions are not established by this release.
+
+V1.292.00 retains V1.203.01's bounded FLAC metadata-block scan so artist/album comments are
 found even when a large PICTURE block places them beyond the stock 8 KiB
 window. It is also a hotfix for rejected V1.203.00: that candidate wrote a
 valid decoded cover cache but its new reader guard suppressed all
@@ -35,6 +39,8 @@ It retains V1.202.03's stock fixed-array 4,000-track architecture and removal
 of the rejected fixed-allocation database-zeroing patch. `M30-STATIC-012`
 remains open; this release makes no claim that unused database ranges are zero
 or free of prior FAT-cluster data.
+
+It retains V1.206.00's hardware-accepted policy change that disables automatic file-list regeneration after USB use, card changes, firmware updates, or a dirty settings flag. Manual **Settings -> Update Playlist** remains available.
 
 It retains the six fixes introduced on the V1.200/V1.201 release line:
 
@@ -78,12 +84,7 @@ It also retains the fourteen V1.101.12 fixes, including:
    drain before normal EOF shutdown, while preserving the stock timeout and
    abnormal-EOF fallback.
 
-The build changes six of the 99 inner firmware members relative to stock.
-Relative to V1.202.03, only `music.ap` and the versioned `setting.ap` change.
-The `music.ap` delta is exactly 112 byte positions in the bounded FLAC finder;
-all three rejected V1.203.00 cache-reader regions are byte-identical to
-V1.202.03. Every application module retains its original size, header, segment
-table, bank table, and fixed allocation.
+Relative to the hardware-accepted V1.206 functional base, only `music.ap` and the versioned `setting.ap` change in the 99-member archive. The V1.287 independent audit verifies the generalized guard, accepted parser ranges, unchanged ordinary painter path and stock cleanup, fixed module sizes/layouts, all 99 members, and two byte-identical updater decryptions.
 
 V1.201.00 retains the V1.200.01 correction for a regression in
 V1.101.14/V1.200.00: pressing a non-power key during playback with the display
@@ -99,11 +100,11 @@ application overlays. The locked-controls Settings entry remains absent.
 > running the matching `2025-06-26` firmware family.
 
 1. Fully charge the player and use a known-good FAT32 SD card.
-2. Copy `releases/v1.203.01/MECHEN_M30.HEX` to the card root.
+2. Copy `releases/v1.292.00/MECHEN_M30.HEX` to the card root.
 3. Ensure it is the only `.HEX` update image on the card.
-4. Verify its SHA-256 against `releases/v1.203.01/SHA256SUMS`.
+4. Verify its SHA-256 against `releases/v1.292.00/SHA256SUMS`.
 5. Open **Settings → Auto Upgrade** and do not interrupt the update.
-6. Confirm version `V1.203.01` and date `2026-08-11` after reboot.
+6. Confirm version `V1.292.00` and date `2026-09-29` after reboot.
 
 V1.101.14 and V1.200.00 were accepted through Auto Upgrade on one Mechen M30,
 but later repeatable testing exposed their screen-off key regression. They are
@@ -123,6 +124,8 @@ Album, Artist/Author, and Genre. V1.203.00 is also withdrawn: its FLAC metadata
 fix worked, but its cache-reader guard suppressed playing-screen art. V1.203.01
 removes that guard and passed the scoped artwork/metadata regression test.
 
+V1.204.00 through V1.286.00 and V1.288.00 through V1.291.00 were research, diagnostic, or intermediate hardware builds and are not public releases. V1.287.00 first promoted the accepted five-format fallback. V1.292.00 restores that exact executable payload under a new version after the post-PLAY research line was rejected. Its exact updater completed Auto Upgrade as documented installation 108; both direct recovery controls displayed covers and remained responsive. Case 11 retained an approximately four-second first-play artwork delay.
+
 After installation, start playback, let the display turn off, and press every
 non-power key individually. Each key must follow the stock locked behavior
 without freezing. Verify power-button wake separately, then repeat the same
@@ -137,18 +140,16 @@ exist. Do not expect unused ranges to be zero.
 
 ## Verification
 
-- Five V1.203.01 composition tests and the inherited component regressions
-  pass.
-- The complete 99-member FWIMAGE rebuild changes only the six declared
-  members and authenticates all six source providers.
-- Every replacement module is baseline-hash pinned and preserves its original
-  module size and load layout.
+- The V1.292 recovery suite, V1.287 focused suite, and inherited component regressions pass.
+- The complete 99-member archive differs from the accepted functional base only in `music.ap` and versioned `setting.ap`.
+- Every replacement module is hash pinned and preserves its fixed module size and load layout.
 - Native FWU verification decrypts the image to AFI SHA-256
-  `9e99d4623edd5cc8f52e25900ed889bb293f1686fa7456b153281f8a2a044b72`.
+  `66e46b5e16d133091a0cf8102ea2a07383d77a8aa33e0393c3b27129ce0e79de`.
 - Rockbox `atjboottool` independently decrypts the same image to a
   byte-identical AFI.
 - Inner FWIMAGE SHA-256:
-  `24ec723633222c78d4a09494d4ebef485653a6355d091ae3b4b8ba0e9ade3575`.
+  `c87035fa32bd83a2c2d36f5564ff4ab049d3f8cdc3ec9a2a75a8eb7a4cb7d745`.
+- One physical M30 displayed covers and remained responsive for both direct V1.292 recovery controls; the executable Music payload is byte-identical to V1.287's five-format hardware-accepted module.
 
 Software verification does not replace device testing across codecs, board
 revisions, SD cards, and failure conditions.
@@ -156,7 +157,7 @@ revisions, SD cards, and failure conditions.
 ## TODO for the next version
 
 Future ordinary releases increment the middle field and reset the final field:
-`V1.203.00`, `V1.204.00`, and so on. The final field is reserved for an
+`V1.292.00`, `V1.293.00`, and so on. The final field is reserved for an
 exceptional hotfix or rebuild on the same release line.
 
 ### Integration targets
@@ -168,10 +169,7 @@ exceptional hotfix or rebuild on the same release line.
 - [ ] Residual `M30-FW-004`: define and test one consistent filename, title,
   disc, track, Unicode, and copy-order policy beyond the two corrected numeric
   defects.
-- [ ] Residual `M30-FW-005`: run the nine-case artwork matrix, distinguishing
-  baseline/progressive JPEG, PNG, dimensions, tag version, embedded art, and
-  external `Folder.jpg`; then change the decoder only where hardware evidence
-  identifies a safe boundary.
+- [ ] Residual `M30-FW-005`: retain V1.292's accepted bounded baseline-JPEG fallback, then research progressive JPEG, PNG, payloads above 44,800 bytes, tag/container coverage, and external `Folder.jpg` separately. Do not return to post-PLAY modify/decode until a non-flash or volatile-RAM discriminator proves the active-audio VFS boundary; scale-only and stopwatch variants remain retired.
 - [ ] Residual `M30-FW-015`: run the long-string device matrix, then address
   remaining UI/codepage failures without increasing fixed buffers in place.
 ### Requires more research before a safe patch

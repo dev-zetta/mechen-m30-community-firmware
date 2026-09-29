@@ -1,5 +1,21 @@
 # Changelog
 
+## V1.292.00 — 2026-09-29
+
+Hardware-accepted recovery release. V1.292.00 restores the exact V1.287.00 `music.ap` after V1.288 through V1.291 research builds rejected post-PLAY fallback execution. Only two displayed-version bytes change in `setting.ap` relative to V1.287; the fallback implementation and every other FWIMAGE member remain byte-identical.
+
+On one Mechen M30, direct case-20 and case-11 recovery tests both displayed their covers and remained responsive. Case 20 began almost immediately. Case 11 began after approximately four seconds, retaining the known synchronous CPU-fallback delay. V1.287's identical Music module had already passed the complete five-case baseline-JPEG matrix covering 4:2:0, 4:4:4, 4:2:2, and grayscale.
+
+The encrypted image SHA-256 is `5e17d883f697a67d4face6f624ddc30952c5542c918b219be974bf380383ed2c`. Native and Rockbox decryption produce the same AFI SHA-256 `66e46b5e16d133091a0cf8102ea2a07383d77a8aa33e0393c3b27129ce0e79de`; the inner FWIMAGE SHA-256 is `c87035fa32bd83a2c2d36f5564ff4ab049d3f8cdc3ec9a2a75a8eb7a4cb7d745`.
+
+## V1.287.00 — 2026-09-29
+
+Hardware-accepted baseline-JPEG album-art compatibility release. A bounded scale-3 CPU fallback now runs only after complete APIC spooling, stock decoder failure, and stock cleanup. It accepts baseline one- and three-component JPEGs, covers 4:2:0, 4:2:2, 4:4:4, and grayscale, caps compressed input at 44,800 bytes and output at 150x150 RGB565, bounds callbacks/MCUs, and rejects output that could overlap unread compressed input. The ordinary stock-success path remains unchanged.
+
+On one Mechen M30, all five pinned 30-second controls displayed covers and started playback: stock-compatible 640x361 4:2:0, fallback 641x361 4:2:0, 641x361 4:4:4, 641x361 4:2:2, and 641x361 grayscale. Every case took approximately three to five seconds before cover and playback. That synchronous first-play delay is a known limitation. Progressive JPEG, PNG, fallback payloads above 44,800 bytes, other codecs/containers, malformed cases beyond the bounded suite, and other hardware revisions remain unverified.
+
+The encrypted image SHA-256 is `d75f08e1e050e4e84bed1a64e9b66e595cb435958900b7d576b817e02ff47d36`. Native and Rockbox decryption produce the same AFI SHA-256 `13c6a3b60c54d1d29cbe2684d66adbbd2c034019f333d3cb634166090563cc89`; the inner FWIMAGE SHA-256 is `7cb1f94fb8fbf10623cb67b0c4f0109a916fb93d6cd37e54c676e3d2524cb327`.
+
 ## V1.203.01 — 2026-08-11
 
 Hardware-accepted FLAC metadata and album-art regression hotfix. The bounded
